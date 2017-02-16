@@ -18,7 +18,7 @@
             //载入人物图片资源
             var charReady = false
             var charImage = new Image
-            charImage.src = "char1.gif"
+            charImage.src = "http://wx2.sinaimg.cn/square/7d0c8de1gy1fcsjndn19og200p00wa9t.gif"
             var chw = charImage.width
             var chh = charImage.height
             charImage.onload = function () {
@@ -27,7 +27,7 @@
             //载入背景图片资源
             var bgReady = false
             var bgImage = new Image
-            bgImage.src = "bg.png"
+            bgImage.src = "http://wx1.sinaimg.cn/mw690/7d0c8de1gy1fcsjnhcrthj20hs0qoweh.jpg"
             bgImage.onload = function () {
                 bgReady = true
             }
