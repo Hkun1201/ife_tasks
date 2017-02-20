@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task 29</title>
+</head>
+<style>
+    *{
+        font-family: "Microsoft YaHei UI";
+    }
+    *:focus{
+        outline: none;
+    }
+    .username{
+        position: relative;
+    }
+    .common span:first-child{
+        display: inline-block;
+        text-align: right;
+        width: 100px;
+        margin-right: 20px;
+    }
+    button{
+        color: #fff;
+        background: #2F79BA;
+        border: 0px;
+        padding: 0px 8px 0px 8px;
+        line-height: 29px;
+    }
+    input{
+        border: 1px solid #ABABAB;
+        padding: 5px;
+        width: 200px;
+        overflow: hidden;
+        border-radius: 5px;
+    }
+    .prompt{
+        margin: 4px 0 4px 0;
+        display: none;
+        position: relative;
+        left: 38px;
+        color: #ABABAB;
+        -webkit-user-select:none;
+        -moz-user-select:none;
+        -ms-user-select:none;
+        user-select:none;;
+    }
+    /*input:required{*/
+        /*border-right: 3px solid #aa0088;*/
+    /*}*/
+</style>
+<script type="text/javascript">
+    window.onload=function () {
+        //获取元素
+        var oname=document.getElementById("name");
+        var validatename=function (somewords) {
+            //
+            var parent=somewords.parentNode
+            var oprompt=parent.getElementsByClassName("prompt")[0]
+            if(somewords.value.length<17&&somewords.value.length>3){
+                somewords.style.borderColor="#72C367"
+                oprompt.textContent="名称格式正确"
+                oprompt.style.color="#72C367"
+            }else {
+                if(somewords.value.length<1) {
+                    somewords.style.borderColor="#ABABAB"
+                    oprompt.textContent="必填，长度为4~16个字符"
+                    oprompt.style.color="#ABABAB"
+                }else {
+                    somewords.style.borderColor="#F47580"
+                    oprompt.textContent="姓名不能为空"
+                    oprompt.style.color="#F47580"
+                }
+            }
+        }
+        oname.addEventListener("focus",function () {
+            this.parentNode.getElementsByClassName("prompt")[0].style.display="block"
+        })
+        oname.addEventListener("keyup",function () {
+            validatename(this)
+        })
+        oname.addEventListener("change",function () {
+            validatename(this)
+        })
+    }
+
+</script>
+<body>
+<form>
+    <div class="username common">
+        <span>名称</span>
+        <input type="text" id="name">
+        <button>验证</button>
+        <p class="prompt">必填，长度为4~16个字符</p>
+    </div>
+    <div class="usercode common">
+        <span>密码</span>
+        <input type="text" id="code">
+        <button>验证</button>
+        <span class="prompt">必填，长度为4~16个字符</span>
+    </div>
+    <div class="cofusercode common">
+        <span>密码确认</span>
+        <input type="text" id="cofcode">
+        <button>验证</button>
+        <span class="prompt">两次输入相同密码</span>
+    </div>
+    <div class="useremail common">
+        <span>邮箱</span>
+        <input type="text" id="email">
+        <button>验证</button>
+        <span class="prompt">输入你的邮箱</span>
+    </div>
+    <div class="userphnum common">
+        <span>手机</span>
+        <input type="text" id="phnum">
+        <button>验证</button>
+        <span class="prompt">必填，长度为4~16个字符</span>
+    </div>
+    <input type="submit">
+
+</form>
+</body>
+</html>
