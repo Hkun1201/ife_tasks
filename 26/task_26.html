@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task 26</title>
+    <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+        body{
+            margin: 0;
+        }
+        .universe{
+            position: relative;
+            width: 900px;
+            height: 800px;
+            background-color: #000;
+        }
+        .planet{
+            box-shadow:0px 0px 50px #ffffff;
+            margin: 0 auto;
+            width: 200px;
+            height: 200px;
+            background-color: #0000ff;
+            border-radius: 50%;
+            color: #fff;
+            text-align: center;
+            line-height: 200px;
+            position: relative;
+            top:300px;
+        }
+        .command-post{
+            box-sizing: border-box;
+            width: 900px;
+            border: 1px solid #000;
+            margin-top: 20px;
+            padding: 20px;
+        }
+        button{
+            background-color: #fff;
+            border: 1px solid #eeeeee;
+        }
+        .spaceship{
+            display: inline-block;
+            position: absolute;
+            left: 450px;
+            top:200px;
+            width: 120px;
+            height: 36px;
+            background-color: #0000ff;
+            border-radius: 18px;
+            transform-origin:0 200px;
+
+        }
+        .enable{
+            animation: move 5s linear infinite;
+        }
+        @keyframes move {
+            100% {
+                transform: /*translateY(350px) translateX(350px) */ rotate(1turn);;
+            }
+        }
+        .spaceship:after{
+            content:".";
+            display:block;
+            height:0;
+            clear:both;
+            visibility:hidden;
+        }
+        .body,.tail,.head{
+            border-radius: 18px;
+            float: left;
+            margin: 0px;
+        }
+        .body{
+            font-size: 12px;
+            line-height: 36px;
+            float: left;
+            width: 80%;
+            height: 100%;
+            border-radius: 14px;
+            background: #999;
+        }
+        .tail {
+            text-align: center;
+            background: #999;
+            width: 85%;
+            height: 100%;
+        }
+        .head{
+            position: relative;
+            width: 15%;
+            height: 100%;
+        }
+        .dialog-box{
+            padding-left: 5px;
+            padding-right: 5px;
+            word-break:keep-all;
+            white-space:nowrap;
+            text-align: center;
+            position: absolute;
+            top: -30px;
+            background: #fff;
+            line-height: 20px;
+            font-size: 12px;
+            border-radius: 2px;
+        }
+    </style>
+    <script type="text/javascript" src="../jquery-3.1.0.js"></script>
+    <script>
+        //飞船工
+        function Spaceship(x) {
+            this.id=x;
+            this.energy=100;
+            this.movestate="";
+            this.recover=""
+        }
+        //飞船状态数据库
+        var spaceshipstatements={
+            creatnewship:function (num) {
+                spaceshipstatements.sp1=new Spaceship(num);
+            }
+        }
+        //预先创建1.2号飞船
+        spaceshipstatements.creatnewship(1)
+        //消耗能量事件
+        var engerylost=function () {
+            
+        }
+        //监听动画事件
+        window.onload=function () {
+            //获取所需元素
+            var un=document.getElementsByClassName("universe")[0]
+            //飞船元素
+            var sp1 = document.getElementById("sp1")
+            var energy1=document.getElementById("energy1")
+            var dialogbox=document.getElementsByClassName("dialog-box")[0]
+            //控制台元素
+            var commandpost=document.getElementsByClassName("command-post")[0]
+            var post1 = document.getElementById("post1")
+            var startbtn1 = document.getElementById("startbtn1")
+            var stopbtn1 = document.getElementById("stopbtn1")
+            var destroybtn1 = document.getElementById("destroybtn1")
+            //飞船开始/恢复按钮
+            startbtn1.addEventListener("click",function () {
+                //停止恢复燃料
+                clearInterval(spaceshipstatements.sp1.recover)
+                if(sp1.classList.contains("enable")){
+                    if(sp1.style.animationPlayState=="paused"&&spaceshipstatements.sp1.energy>0)
+                    //恢复前进
+                    {
+//                        alert("继续")
+                        sp1.style.animationPlayState="running";
+                        spaceshipstatements.sp1.movestate=setInterval(function () {
+                            if(parseInt(spaceshipstatements.sp1.energy)>0){
+                                spaceshipstatements.sp1.energy=parseInt(spaceshipstatements.sp1.energy)-1;
+                                energy1.textContent=spaceshipstatements.sp1.energy
+                            }else {
+                                clearInterval(spaceshipstatements.sp1.movestate);
+                                sp1.style.animationPlayState="paused";
+                                spaceshipstatements.sp1.recover=setInterval(function () {
+                                    spaceshipstatements.sp1.energy=parseInt(spaceshipstatements.sp1.energy)+1;
+                                    energy1.textContent=spaceshipstatements.sp1.energy
+                                    if(spaceshipstatements.sp1.energy==100){
+                                        clearInterval(spaceshipstatements.sp1.recover)
+                                        dialogbox.style.opacity=0.8
+                                        //邮箱加满提示框出现
+                                        dialogbox.textContent="加满油了，又可以浪了";
+                                        //提示框淡出
+                                        var myfadeout=setInterval(function () {
+                                            if(dialogbox.style.opacity<0){
+                                                dialogbox.textContent=""
+                                                clearInterval(myfadeout)
+                                            }else {
+                                                dialogbox.style.opacity=dialogbox.style.opacity-0.1
+                                            }
+                                        },500)
+                                    }
+                                },1500)
+                            }
+                        },100)
+
+                    }else {
+                    }
+                }
+                //第一次点火
+                else {
+                    sp1.className = sp1.className + " enable"
+                    sp1.style.animationPlayState="running";
+                    spaceshipstatements.sp1.movestate=setInterval(function () {
+                        if(parseInt(spaceshipstatements.sp1.energy)>0){
+                            spaceshipstatements.sp1.energy=parseInt(spaceshipstatements.sp1.energy)-1;
+                            energy1.textContent=spaceshipstatements.sp1.energy
+                        }else {
+                            clearInterval(spaceshipstatements.sp1.movestate);
+                            sp1.style.animationPlayState="paused";
+                            spaceshipstatements.sp1.recover=setInterval(function () {
+                                spaceshipstatements.sp1.energy=parseInt(spaceshipstatements.sp1.energy)+1;
+                                energy1.textContent=spaceshipstatements.sp1.energy
+                                if(spaceshipstatements.sp1.energy==100){
+                                    clearInterval(spaceshipstatements.sp1.recover)
+                                    dialogbox.style.opacity=0.8
+                                    //邮箱加满提示框出现
+                                    dialogbox.textContent="加满油了，又可以浪了";
+                                    //提示框淡出
+                                    var myfadeout=setInterval(function () {
+                                        if(dialogbox.style.opacity<0){
+                                            dialogbox.textContent=""
+                                            clearInterval(myfadeout)
+                                        }else {
+                                            dialogbox.style.opacity=dialogbox.style.opacity-0.1
+                                        }
+                                    },500)
+                                }
+                            },1500)
+                        }
+                    },100)
+                }
+            })
+            //飞船停止按钮
+            stopbtn1.addEventListener("click",function () {
+                //结束恢复燃料
+                clearInterval(spaceshipstatements.sp1.recover)
+                sp1.style.animationPlayState="paused";
+                clearInterval(spaceshipstatements.sp1.movestate);
+//                alert(spaceshipstatements.sp1.energy)
+                //恢复燃料
+                if(spaceshipstatements.sp1.energy<100){
+                    spaceshipstatements.sp1.recover=setInterval(function () {
+                        spaceshipstatements.sp1.energy=parseInt(spaceshipstatements.sp1.energy)+1;
+                        energy1.textContent=spaceshipstatements.sp1.energy
+                        if(spaceshipstatements.sp1.energy==100){
+                            clearInterval(spaceshipstatements.sp1.recover)
+                            dialogbox.style.opacity=0.8
+                            //邮箱加满提示框出现
+                            dialogbox.textContent="加满油了，又可以浪了";
+                            //提示框淡出
+                            var myfadeout=setInterval(function () {
+                                if(dialogbox.style.opacity<0){
+                                    dialogbox.textContent=""
+                                    clearInterval(myfadeout)
+                                }else {
+                                    dialogbox.style.opacity=dialogbox.style.opacity-0.1
+                                }
+                            },500)
+                        }
+                    },1500)
+                }
+            })
+            //飞船自毁
+            destroybtn1.addEventListener("click",function () {
+                un.removeChild(sp1);
+                commandpost.removeChild(post1)
+            })
+        }
+    </script>
+</head>
+<body>
+<div class="universe">
+    <div class="spaceship" id="sp1">
+        <div class="head">
+            <div class="dialog-box">
+            </div>
+        </div>
+        <div class="tail">
+            <div class="body">
+                <span>1号</span>-燃料<span id="energy1">100</span>%
+            </div>
+        </div>
+    </div>
+    <div class="planet">
+        蓝星
+    </div>
+</div>
+<div class="command-post">
+    <div id="post1">
+        对1号飞船下达指令：
+        <button id="startbtn1">开始飞行</button>
+        <button id="stopbtn1">停止飞行</button>
+        <button id="destroybtn1">销毁</button>
+    </div>
+    <div>对2号飞船下达指令：</div>
+</div>
+</body>
+</html>
