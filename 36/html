@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task 36听指令的小方块</title>
+    <meta name=”viewport” content=”width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;” />
+    <link href="../reset.css" type="text/css">
+    <style>
+        *{
+        }
+        body>div{
+            margin: 0 auto;
+        }
+        .wrap{
+        }
+        .wrap:after{
+            content:".";
+            display:block;
+            height:0;
+            clear:both;
+            visibility:hidden;
+        }
+        .main,.y-axis,#rows,.commandlist2{
+            float: left;
+        }
+        .commandlist2{
+            margin-left: 20px;
+        }
+        #commandeditor{
+            padding-top: 5px;
+            padding-left: 5px;
+            overflow: auto;
+            outline:none;
+            width: 300px;
+            height: 366px;
+            line-height: 18px;
+            resize:none;
+            text-align: left;
+            background-color: #000;
+            border: 0;
+            color: #1B5C1C;
+        }
+        #rows {
+            padding-top: 5px;
+            padding-bottom: 2px;
+            line-height: 18px;
+            width:30px ;
+            background:#CCCCCC ;
+            text-align: center;
+            color: #F5F5F5;
+            height: 100%;
+        }
+        #rows>div{
+            text-align: center;
+            margin: 0 auto;
+        }
+        .y-axis{
+            display: table;
+            width: 75px;
+            line-height: 75px;
+        }
+        .y-axis .table-row{
+            text-align: center;
+
+            box-sizing: border-box;
+            width:75px;
+            height: 75px;
+        }
+        .table{
+            width:750px ;
+            border:1px #000 solid ;
+        }
+        .main{
+            position: relative;
+        }
+        .table-cell{
+            display: table-cell;
+            box-sizing: border-box;
+            width: 75px;
+            height: 75px;
+            border:1px #ECECEC solid ;
+        }
+        .table-row div{
+            display: table-cell;
+        }
+        .row-coordinates .table-cell,.cell-coordinates{
+            border: 0;
+        }
+        .x-axis{
+            text-align: center;
+            display: table;
+            width: 825px;
+            border: 0;
+        }
+        .x-axis .table-cell{
+            text-align: center;
+            height: 50px;
+            line-height: 50px;
+            border: 0;
+        }
+        #square{
+            position: absolute;
+            top:1px;
+            left: 1px;
+            width: 73px;
+            height: 73px;
+            background: #FE0000;
+        }
+        #square .head{
+            width: 100%;
+            height: 20%;
+            background: #0000FD;
+        }
+        #command-text{
+            width: 14em;
+        }
+        #command-text,#submit{
+            font-size: 20px;
+            height: 24px;
+            line-height: 24px;
+        }
+        #submit{
+            height: 30px;
+        }
+        #x-height,#y-height{
+            font-size: 20px;
+            height: 24px;
+            line-height: 24px;
+        }
+    </style>
+    <script>
+        window.onload=function () {
+            //地图
+            var map={
+                wall:[]
+            }
+            //储存小方块的一些属性/方法
+            var thesquare={
+                //旋转运动状态
+                rotatestate:false,
+                //移动运动状态
+                motionstate:false,
+                //角度
+                rotate:0,
+                //运动指令集
+                commondlist:["go","turn left","turn right","turn around","tra left","tra right","tra top","tra bot","mov left","mov right","mov top","mov bot","build"],
+                //位置
+                position:{x:1,y:1},
+                //巡航模式
+                cruisemode:false
+            }
+            //获取所需元素
+            var _tablerow=document.getElementsByClassName("table-row")
+            var _square=document.getElementById("square")
+            var _submit=document.getElementById("submit")
+            var _sleft=parseInt(_square.style.left)
+            var _command=document.getElementById("command-text")
+            var _rows=document.getElementById("rows")
+            var _commandeditor=document.getElementById("commandeditor")
+            var _comedtcfm=document.getElementById("comedt_cfm")
+            var _comedtref=document.getElementById("comedt_ref")
+            var _comedtran=document.getElementById("comedt_ran")
+            var x_height=document.getElementById("x-height")
+            var y_height=document.getElementById("y-height")
+            var _cruise=document.getElementById("comedt_cruise")
+            var _cruisecmd=document.getElementById("cruise_cmd")
+            var _cruisestop=document.getElementById("comedt_cruise_stop")
+            //定义一些方块的行为
+            //旋转
+            var setrotate=function (x,y,step) {
+                //判断是否在转动中
+                if(thesquare.rotatestate==true){
+                    return false
+                }
+                //让小方块处于转动状态
+                thesquare.rotatestate=true;
+                var roaction=setInterval(function () {
+                    //获取方块当前角度
+                    var _sdict=(_square.style.WebkitTransform||_square.style.transform||_square.style.MsTransform||_square.style.MozTransform||_square.style.otransform)
+                    //角度转化成数值
+                    var n_srotate=parseInt(_sdict.substring(7))+step;
+                    /*
+                     if(x.style.WebkitTransform=="rotate("+y+"deg)"){
+                     clearInterval(raction)
+                     }
+                     if(x.style.transform=="rotate("+y+"deg)"){
+                     clearInterval(raction)
+                     }
+                     if(x.style.MsTransform=="rotate("+y+"deg)"){
+                     clearInterval(raction)
+                     }
+                     if(x.style.MozTransform=="rotate("+y+"deg)"){
+                     clearInterval(raction)
+                     }
+                     if(x.style.otransform=="rotate("+y+"deg)"){
+                     clearInterval(raction)
+                     }
+                     */
+                    x.style.WebkitTransform="rotate("+n_srotate+"deg)"
+                    x.style.transform="rotate("+n_srotate+"deg)"
+                    x.style.MsTransform="rotate("+n_srotate+"deg)"
+                    x.style.MozTransform="rotate("+n_srotate+"deg)"
+                    x.style.otransform="rotate("+n_srotate+"deg)"
+                    //结束运动
+                    if(n_srotate===y){
+                        //小方块的运动状态静止
+                        thesquare.rotatestate=false
+                        clearInterval(roaction)
+                    }
+                },100)
+                /*
+                 task33方法
+                 x.style.WebkitTransform="rotate("+y+"deg)"
+                 x.style.transform="rotate("+y+"deg)"
+                 x.style.MsTransform="rotate("+y+"deg)"
+                 x.style.MozTransform="rotate("+y+"deg)"
+                 x.style.otransform="rotate("+y+"deg)"
+                 */
+            }
+            //载入之后的一些设置
+            _rows.style.height=document.defaultView.getComputedStyle(_commandeditor,null).height
+            x_height.textContent=thesquare.position.x
+            y_height.textContent=thesquare.position.y
+            //设定小方块的坐标并把他同步给相应的元素
+            var setposition=function (dx,dy) {
+                thesquare.position.x=parseInt(dx)+thesquare.position.x
+                thesquare.position.y=parseInt(dy)+thesquare.position.y
+                x_height.textContent=thesquare.position.x
+                y_height.textContent=thesquare.position.y
+            }
+            //左侧筑墙
+            var buildl=function () {
+                //判断左侧是否为边界
+                if(thesquare.position.x==1){
+                    console.log("触碰到边界")
+                    return false
+                }
+                    //获取左侧坐标
+                    var destination={
+                        x:thesquare.position.x-1,
+                        y:thesquare.position.y
+                    }
+                    //获取目标网格
+                var orow=_tablerow[destination.y+10]
+                var ocell=orow.getElementsByClassName("table-cell")[destination.x-1]
+                    //判断左侧是否有墙
+                    for (var i=0;i<map.wall.length;i++){
+                        if(map.wall[i].x==destination.x&&map.wall[i].y==destination.y){
+                            console.log("触碰到已有墙壁")
+                            return false
+                        }
+                    }
+                //在目标地点筑墙
+                //更新map中的wall
+                map.wall.push(destination)
+                //在目标网格上筑墙
+                ocell.style.backgroundColor="#ECECEC"
+            }
+            //右侧筑墙
+            var buildr=function () {
+                //判断右侧是否为边界
+                if(thesquare.position.x==10){
+                    console.log("触碰到边界")
+                    return false
+                }
+                //获取目标坐标
+                var destination={
+                    x:thesquare.position.x+1,
+                    y:thesquare.position.y
+                }
+                //获取目标网格
+                var orow=_tablerow[destination.y+10]
+                var ocell=orow.getElementsByClassName("table-cell")[destination.x-1]
+                //判断右侧是否有墙
+                for (var i=0;i<map.wall.length;i++){
+                    if(map.wall[i].x==destination.x&&map.wall[i].y==destination.y){
+                        console.log("触碰到已有墙壁")
+                        return false
+                    }
+                }
+                //在目标地点筑墙
+                //更新map中的wall
+                map.wall.push(destination)
+                //在目标网格上筑墙
+                ocell.style.backgroundColor="#ECECEC"
+            }
+            //上方筑墙
+            var buildt=function () {
+                //判断上方是否为边界
+                if(thesquare.position.y==1){
+                    console.log("触碰到边界")
+                    return false
+                }
+                //获取目标坐标
+                var destination={
+                    x:thesquare.position.x,
+                    y:thesquare.position.y-1
+                }
+                //获取目标网格
+                var orow=_tablerow[destination.y+10]
+                var ocell=orow.getElementsByClassName("table-cell")[destination.x-1]
+                //判断上方是否有墙
+                for (var i=0;i<map.wall.length;i++){
+                    if(map.wall[i].x==destination.x&&map.wall[i].y==destination.y){
+                        console.log("触碰到已有墙壁")
+                        return false
+                    }
+                }
+                //在目标地点筑墙
+                //更新map中的wall
+                map.wall.push(destination)
+                //在目标网格上筑墙
+                ocell.style.backgroundColor="#ECECEC"
+            }
+            //下方筑墙
+            var buildd=function () {
+                //判断下方是否为边界
+                if(thesquare.position.y==10){
+                    console.log("触碰到边界")
+                    return false
+                }
+                //获取目标坐标
+                var destination={
+                    x:thesquare.position.x,
+                    y:thesquare.position.y+1
+                }
+                //获取目标网格
+                var orow=_tablerow[destination.y+10]
+                var ocell=orow.getElementsByClassName("table-cell")[destination.x-1]
+                //判断下方是否有墙
+                for (var i=0;i<map.wall.length;i++){
+                    if(map.wall[i].x==destination.x&&map.wall[i].y==destination.y){
+                        console.log("触碰到已有墙壁")
+                        return false
+                    }
+                }
+                //在目标地点筑墙
+                //更新map中的wall
+                map.wall.push(destination)
+                //在目标网格上筑墙
+                ocell.style.backgroundColor="#ECECEC"
+            }
+            //左移
+            var movel=function (s) {
+                //检测是否在边缘
+                if(s.style.left=="1px"){
+                    return false
+                }
+                //获取目标坐标
+                var destination={
+                    x:thesquare.position.x-1,
+                    y:thesquare.position.y
+                }
+                //判断下方是否有墙
+                for (var i=0;i<map.wall.length;i++) {
+                    if (map.wall[i].x == destination.x && map.wall[i].y == destination.y) {
+                        console.log("触碰到已有墙壁")
+                        return false
+                    }
+                }
+                //判断是否在运动中
+                if(thesquare.motionstate==true){
+                    return false
+                }
+                //小方块处于运动状态
+                thesquare.motionstate=true
+                //获取目标地点
+                var ldest=parseInt(s.style.left)-75
+                //开始运动
+                var action=setInterval(function () {
+                    var newleft=parseInt(s.style.left)-3
+                    s.style.left=newleft+"px"
+                    //到达目的地之后停止并且给让小方块处于静止状态
+                    if(parseInt(s.style.left)==ldest){
+                        //结束小方块的移动状态
+                        thesquare.motionstate=false
+                        //小方块在坐标中向左移动了一个单位
+                        setposition(-1,0)
+                        clearInterval(action)
+                    }
+                },40)
+            }
+            //右移
+            var mover=function (s) {
+                //检测是否在边缘
+                if(s.style.left=="676px"){
+                    return false
+                }
+                //获取目标坐标
+                var destination={
+                    x:thesquare.position.x+1,
+                    y:thesquare.position.y
+                }
+                //判断下方是否有墙
+                for (var i=0;i<map.wall.length;i++) {
+                    if (map.wall[i].x == destination.x && map.wall[i].y == destination.y) {
+                        console.log("触碰到已有墙壁")
+                        return false
+                    }
+                }
+                //判断是否在运动中
+                if(thesquare.motionstate==true){
+                    return false
+                }
+                //让小方块处于运动状态
+                thesquare.motionstate=true
+                //获取目标地点
+                var ldest=parseInt(s.style.left)+75
+                //开始运动
+                var action=setInterval(function () {
+                    var newleft=parseInt(s.style.left)+3
+                    s.style.left=newleft+"px"
+                    //到达目的地之后停止并且给让小方块处于静止状态
+                    if(parseInt(s.style.left)==ldest){
+                        thesquare.motionstate=false
+                        //小方块在坐标中向右移动了一个单位
+                        setposition(1,0)
+                        clearInterval(action)
+                    }
+                },40)
+            }
+            //上移
+            var moveu=function (s) {
+                //检测是否在边缘
+                if(s.style.top=="1px"){
+                    return false
+                }
+                //获取目标坐标
+                var destination={
+                    x:thesquare.position.x,
+                    y:thesquare.position.y-1
+                }
+                //判断上方是否有墙
+                for (var i=0;i<map.wall.length;i++) {
+                    if (map.wall[i].x == destination.x && map.wall[i].y == destination.y) {
+                        console.log("触碰到已有墙壁")
+                        return false
+                    }
+                }
+                //判断是否在运动中
+                if(thesquare.motionstate==true){
+                    return false
+                }
+                //小方块处于运动状态
+                thesquare.motionstate=true
+                //获取目标地点
+                var tdest=parseInt(s.style.top)-75
+                //开始运动
+                var action=setInterval(function () {
+                    var newtop=parseInt(s.style.top)-3
+                    s.style.top=newtop+"px"
+                    //到达目的地之后停止并且给让小方块处于静止状态
+                    if(parseInt(s.style.top)==tdest){
+                        thesquare.motionstate=false
+                        //小方块在坐标中向上移动了一个单位
+                        setposition(0,-1)
+                        clearInterval(action)
+                    }
+                },40)
+            }
+            //下移
+            var moved=function (s) {
+                //检测是否在边缘
+                if(s.style.top=="676px"){
+                    return false
+                }
+                //获取目标坐标
+                var destination={
+                    x:thesquare.position.x,
+                    y:thesquare.position.y+1
+                }
+                //判断下方是否有墙
+                for (var i=0;i<map.wall.length;i++) {
+                    if (map.wall[i].x == destination.x && map.wall[i].y == destination.y) {
+                        console.log("触碰到已有墙壁")
+                        return false
+                    }
+                }
+                //判断是否在运动中
+                if(thesquare.motionstate==true){
+                    return false
+                }
+                //小方块处于运动状态
+                thesquare.motionstate=true
+                //获取目标地点
+                var tdest=parseInt(s.style.top)+75
+                //开始运动
+                var action=setInterval(function () {
+                    var newtop=parseInt(s.style.top)+3
+                    s.style.top=newtop+"px"
+                    //到达目的地之后停止并且给让小方块处于静止状态
+                    if(parseInt(s.style.top)==tdest){
+                        thesquare.motionstate=false
+                        //小方块在坐标中向下移动了一个单位
+                        setposition(0,1)
+                        clearInterval(action)
+                    }
+                },40)
+            }
+            //
+            var setrows=function () {
+                _rows.style.height=_commandeditor.style.height
+            }
+            //造墙
+            var buildwall=function () {
+                //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                var _srotatesidenum = _srotate / 90;
+                //判断正负
+                //正
+                if (_srotatesidenum > 0) {
+                    //向左的情况
+                    if (_srotatesidenum % 4 == 3) {
+                        movel(_square)
+                    }
+                    //向上的情况
+                    else if (_srotatesidenum % 4 == 0) {
+                        moveu(_square)
+                    }
+                    //向下的情况
+                    else if (_srotatesidenum % 4 == 2) {
+                        moved(_square)
+                    }
+                    //向右的情况
+                    else if (_srotatesidenum % 4 == 1) {
+                        mover(_square)
+                    }
+                }
+                //零
+                else if (_srotatesidenum == 0) {
+                    moveu(_square)
+                }
+                //负数
+                else if (_srotatesidenum < 0) {
+                    //向左
+                    if (_srotatesidenum % 4 == -1) {
+                        movel(_square)
+                    }
+                    //向下
+                    else if (_srotatesidenum % 4 == -2) {
+                        moved(_square)
+                    }
+                    //向右
+                    else if (_srotatesidenum % 4 == -3) {
+                        mover(_square)
+                    }
+                    //向上
+                    else if (_srotatesidenum % 4 == 0) {
+                        moveu(_square)
+                    }
+                }
+            }
+            //执行命令的程序
+            var _s_engine=function (cmdtext) {
+                //获取方块当前角度
+                var _sdict = (_square.style.WebkitTransform || _square.style.transform || _square.style.MsTransform || _square.style.MozTransform || _square.style.otransform)
+                //角度转化成数值
+                var _srotate = parseInt(_sdict.substring(7))
+                //获取输入框文字
+                var _commandtext = _command.value
+                //封装一些基本运动
+                //左转，角度-90
+                /*
+                 var lrotate=function () {
+                 var n_srotate=_srotate-90;
+                 var step=-9;
+                 setrotate(_square,n_srotate,step)
+                 }
+                 */
+                //左转
+                if (cmdtext == "turn left") {
+                    var n_srotate = _srotate - 90;
+                    var step = -9;
+                    setrotate(_square, n_srotate, step)
+                }
+                //右转
+                else if (cmdtext == "turn right") {
+                    var n_srotate = _srotate + 90;
+                    var step = 9;
+                    setrotate(_square, n_srotate, step)
+                }
+                //回头
+                else if (cmdtext == "turn around") {
+                    var n_srotate = _srotate + 180;
+                    var step = 18;
+                    setrotate(_square, n_srotate, step)
+                }
+                //前进
+                else if (cmdtext == "go") {
+                    //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                    var _srotatesidenum = _srotate / 90;
+                    //判断正负
+                    //正
+                    if (_srotatesidenum > 0) {
+                        //向左的情况
+                        if (_srotatesidenum % 4 == 3) {
+                            movel(_square)
+                        }
+                        //向上的情况
+                        else if (_srotatesidenum % 4 == 0) {
+                            moveu(_square)
+                        }
+                        //向下的情况
+                        else if (_srotatesidenum % 4 == 2) {
+                            moved(_square)
+                        }
+                        //向右的情况
+                        else if (_srotatesidenum % 4 == 1) {
+                            mover(_square)
+                        }
+                    }
+                    //零
+                    else if (_srotatesidenum == 0) {
+                        moveu(_square)
+                    }
+                    //负数
+                    else if (_srotatesidenum < 0) {
+                        //向左
+                        if (_srotatesidenum % 4 == -1) {
+                            movel(_square)
+                        }
+                        //向下
+                        else if (_srotatesidenum % 4 == -2) {
+                            moved(_square)
+                        }
+                        //向右
+                        else if (_srotatesidenum % 4 == -3) {
+                            mover(_square)
+                        }
+                        //向上
+                        else if (_srotatesidenum % 4 == 0) {
+                            moveu(_square)
+                        }
+                    }
+                }
+                //左移
+                else if (cmdtext == "tra left") {
+                    movel(_square)
+                }
+                //右移
+                else if (cmdtext == "tra right") {
+                    mover(_square)
+                }
+                //上移
+                else if (cmdtext == "tra top") {
+                    moveu(_square)
+                }
+                //下移
+                else if (cmdtext == "tra bot") {
+                    moved(_square)
+                }
+                //左转向前
+                else if (cmdtext == "mov left") {
+                    //左移
+                    movel(_square)
+                    //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                    var _srotatesidenum = _srotate / 90;
+                    //判断正负
+                    //正or零
+                    if (_srotatesidenum >= 0) {
+                        //向左的情况
+                        if (_srotatesidenum % 4 == 3) {
+                            //不发生转动
+                        }
+                        //向上的情况
+                        else if (_srotatesidenum % 4 == 0) {
+                            //向左旋转
+                            var n_srotate = _srotate - 90;
+                            var step = -9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向下的情况
+                        else if (_srotatesidenum % 4 == 2) {
+                            //向右旋转
+                            var n_srotate = _srotate + 90;
+                            var step = 9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向右的情况
+                        else if (_srotatesidenum % 4 == 1) {
+                            //回头
+                            var n_srotate = _srotate + 180;
+                            var step = 18;
+                            setrotate(_square, n_srotate, step)
+                        }
+                    }
+                    //负数
+                    else if (_srotatesidenum < 0) {
+                        //向左
+                        if (_srotatesidenum % 4 == -1) {
+                            //不旋转
+                        }
+                        //向下
+                        else if (_srotatesidenum % 4 == -2) {
+                            //向右旋转
+                            var n_srotate = _srotate + 90;
+                            var step = 9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向右
+                        else if (_srotatesidenum % 4 == -3) {
+                            //回头
+                            var n_srotate = _srotate + 180;
+                            var step = 18;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向上
+                        else if (_srotatesidenum % 4 == 0) {
+                            //向左旋转
+                            var n_srotate = _srotate - 90;
+                            var step = -9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                    }
+                }
+                //右转向右
+                else if (cmdtext == "mov right") {
+                    //右移
+                    mover(_square)
+                    //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                    var _srotatesidenum = _srotate / 90;
+                    //判断正负
+                    //正or零
+                    if (_srotatesidenum >= 0) {
+                        //向左的情况
+                        if (_srotatesidenum % 4 == 3) {
+                            //回头
+                            var n_srotate = _srotate + 180;
+                            var step = 18;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向上的情况
+                        else if (_srotatesidenum % 4 == 0) {
+                            //向右旋转
+                            var n_srotate = _srotate + 90;
+                            var step = 9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向下的情况
+                        else if (_srotatesidenum % 4 == 2) {
+                            //向左旋转
+                            var n_srotate = _srotate - 90;
+                            var step = -9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向右的情况
+                        else if (_srotatesidenum % 4 == 1) {
+                            //不转动
+                        }
+                    }
+                    //负数
+                    else if (_srotatesidenum < 0) {
+                        //向左
+                        if (_srotatesidenum % 4 == -1) {
+                            //回头
+                            var n_srotate = _srotate + 180;
+                            var step = 18;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向下
+                        else if (_srotatesidenum % 4 == -2) {
+                            //向左旋转
+                            var n_srotate = _srotate - 90;
+                            var step = -9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向右
+                        else if (_srotatesidenum % 4 == -3) {
+                            //不旋转
+                        }
+                        //向上
+                        else if (_srotatesidenum % 4 == 0) {
+                            //向右旋转
+                            var n_srotate = _srotate + 90;
+                            var step = 9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                    }
+                }
+                //朝上上移
+                else if (cmdtext == "mov top") {
+                    //上移
+                    moveu(_square)
+                    //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                    var _srotatesidenum = _srotate / 90;
+                    //判断正负
+                    //正or零
+                    if (_srotatesidenum >= 0) {
+                        //向左的情况
+                        if (_srotatesidenum % 4 == 3) {
+                            //向右旋转
+                            var n_srotate = _srotate + 90;
+                            var step = 9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向上的情况
+                        else if (_srotatesidenum % 4 == 0) {
+                            //不旋转
+                        }
+                        //向下的情况
+                        else if (_srotatesidenum % 4 == 2) {
+                            //回头
+                            var n_srotate = _srotate + 180;
+                            var step = 18;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向右的情况
+                        else if (_srotatesidenum % 4 == 1) {
+                            //向左旋转
+                            var n_srotate = _srotate - 90;
+                            var step = -9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                    }
+                    //负数
+                    else if (_srotatesidenum < 0) {
+                        //向左
+                        if (_srotatesidenum % 4 == -1) {
+                            //向右旋转
+                            var n_srotate = _srotate + 90;
+                            var step = 9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向下
+                        else if (_srotatesidenum % 4 == -2) {
+                            //回头
+                            var n_srotate = _srotate + 180;
+                            var step = 18;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向右
+                        else if (_srotatesidenum % 4 == -3) {
+                            //向左旋转
+                            var n_srotate = _srotate - 90;
+                            var step = -9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向上
+                        else if (_srotatesidenum % 4 == 0) {
+                            //不旋转
+                        }
+                    }
+                }
+                //朝下下移
+                else if (cmdtext == "mov bot") {
+                    //下移
+                    moved(_square)
+                    //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                    var _srotatesidenum = _srotate / 90;
+                    //判断正负
+                    //正or零
+                    if (_srotatesidenum >= 0) {
+                        //向左的情况
+                        if (_srotatesidenum % 4 == 3) {
+                            //向左旋转
+                            var n_srotate = _srotate - 90;
+                            var step = -9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向上的情况
+                        else if (_srotatesidenum % 4 == 0) {
+                            //回头
+                            var n_srotate = _srotate + 180;
+                            var step = 18;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向下的情况
+                        else if (_srotatesidenum % 4 == 2) {
+                            //不旋转
+                        }
+                        //向右的情况
+                        else if (_srotatesidenum % 4 == 1) {
+                            //向右旋转
+                            var n_srotate = _srotate + 90;
+                            var step = 9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                    }
+                    //负数
+                    else if (_srotatesidenum < 0) {
+                        //向左
+                        if (_srotatesidenum % 4 == -1) {
+                            //向左旋转
+                            var n_srotate = _srotate - 90;
+                            var step = -9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向下
+                        else if (_srotatesidenum % 4 == -2) {
+                            //不旋转
+                        }
+                        //向右
+                        else if (_srotatesidenum % 4 == -3) {
+                            //向右旋转
+                            var n_srotate = _srotate + 90;
+                            var step = 9;
+                            setrotate(_square, n_srotate, step)
+                        }
+                        //向上
+                        else if (_srotatesidenum % 4 == 0) {
+                            //回头
+                            var n_srotate = _srotate + 180;
+                            var step = 18;
+                            setrotate(_square, n_srotate, step)
+                        }
+                    }
+                }
+                else if (cmdtext == "build") {
+                    //判断是否在运动/转向中
+                    if (thesquare.motionstate == true || thesquare.rotatestate == true) {
+                        return false
+                    }
+                    //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                    var _srotatesidenum = _srotate / 90;
+                    //判断正负
+                    //正
+                    if (_srotatesidenum > 0) {
+                        //向左的情况
+                        if (_srotatesidenum % 4 == 3) {
+                            buildl()
+                        }
+                        //向上的情况
+                        else if (_srotatesidenum % 4 == 0) {
+                            buildt()
+                        }
+                        //向下的情况
+                        else if (_srotatesidenum % 4 == 2) {
+                            buildd()
+                        }
+                        //向右的情况
+                        else if (_srotatesidenum % 4 == 1) {
+                            buildr()
+                        }
+                    }
+                    //零
+                    else if (_srotatesidenum == 0) {
+                        buildt()
+                    }
+                    //负数
+                    else if (_srotatesidenum < 0) {
+                        //向左
+                        if (_srotatesidenum % 4 == -1) {
+                            buildl()
+                        }
+                        //向下
+                        else if (_srotatesidenum % 4 == -2) {
+                            buildd()
+                        }
+                        //向右
+                        else if (_srotatesidenum % 4 == -3) {
+                            buildr()
+                        }
+                        //向上
+                        else if (_srotatesidenum % 4 == 0) {
+                            buildt()
+                        }
+                        else {
+                            return false
+                        }
+                    }
+                }
+            }
+            //点击执行触发事件
+            _comedtcfm.addEventListener("click",function () {
+                if(_commandeditor.value==""){
+                    return false
+                }
+                //refresh键失效
+                _comedtref.disabled=true
+                //执行键失效
+                _comedtcfm.disabled=true
+                //文本框失效
+                _commandeditor.disabled=true
+                //随机生成失效
+                _comedtran.disabled=true
+                _commandeditor.style.color="yellow"
+                var cmdlist=_commandeditor.value.split("\n")
+                var i=0
+                var ewew=setInterval(function () {
+                    if(_s_engine(cmdlist[i])===false){
+                        //标记错误指令所在行红色
+                        _rows.children[i].style.backgroundColor="red"
+                    }
+                    else {
+                        //标记正确指令所在行绿色
+                        _rows.children[i].style.backgroundColor="#16B10E"
+                    }
+                    _s_engine(cmdlist[i])
+                    i++
+                    if(i==cmdlist.length){
+                        //指令全部完成
+                        _comedtref.disabled=false
+                        clearInterval(ewew)
+                    }
+                },2000)
+            })
+            //refresh按键
+            _comedtref.addEventListener("click",function () {
+                for(var i=0;i<_rows.children.length;i++){
+                    _rows.children[i].style.backgroundColor="#CCCCCC"
+                }
+                //恢复执行键
+                _comedtcfm.disabled=false
+                //恢复随机生成键
+                _comedtran.disabled=false
+                //清空文本框
+                _commandeditor.value=""
+                _commandeditor.disabled=false
+                _commandeditor.style.color="#1B5C1C"
+            })
+            // 随机生成指令
+            _comedtran.addEventListener("click",function () {
+                //清空文本框
+                _commandeditor.value=""
+                _commandeditor.disabled=false
+                _commandeditor.style.color="#1B5C1C"
+                //生成指令
+                for(var i=0;i<5;i++) {
+                    var index = Math.floor((Math.random() * thesquare.commondlist.length));
+                    if(i==4){
+                        _commandeditor.value=_commandeditor.value+thesquare.commondlist[index]
+                    }else {
+                        _commandeditor.value = _commandeditor.value + thesquare.commondlist[index] + "\n"
+                    }
+                }
+            })
+            //自动模式
+            _cruise.addEventListener("click",function () {
+                //执行键失效
+                _comedtcfm.disabled=true
+                //禁用自动模式按钮
+                _cruise.disabled=true
+                thesquare.cruisemode=setInterval(function () {
+                    var index = Math.floor((Math.random() * thesquare.commondlist.length));
+                    _cruisecmd.textContent=thesquare.commondlist[index];
+                    _s_engine(thesquare.commondlist[index])
+                    //随机生成一个指令
+                },2000)
+            })
+            //停止自动模式
+            _cruisestop.addEventListener("click",function () {
+                //恢复执行键
+                _comedtcfm.disabled=false
+                clearInterval(thesquare.cruisemode)
+                //恢复自动模式按钮
+                _cruise.disabled=false
+            })
+            //拖动指令编辑器事件
+            _commandeditor.addEventListener("keydown",function () {
+            })
+            _commandeditor.addEventListener("DOMNodeInsertedIntoDocument",function () {
+                alert(1)
+            })
+            //点击清空指令栏
+            _command.addEventListener("click",function () {
+                this.value=""
+            })
+            //施行指令
+            _submit.addEventListener("click",function () {
+                    //获取方块当前角度
+                    var _sdict=(_square.style.WebkitTransform||_square.style.transform||_square.style.MsTransform||_square.style.MozTransform||_square.style.otransform)
+                    //角度转化成数值
+                    var _srotate=parseInt(_sdict.substring(7))
+                    //获取输入框文字
+                    var _commandtext=_command.value
+                    //封装一些基本运动
+                    //左转，角度-90
+                        /*
+                         var lrotate=function () {
+                         var n_srotate=_srotate-90;
+                         var step=-9;
+                         setrotate(_square,n_srotate,step)
+                         }
+                         */
+                    //左转
+                    if(_commandtext=="turn left"){
+                        var n_srotate=_srotate-90;
+                        var step=-9;
+                        setrotate(_square,n_srotate,step)
+                    }
+                    //右转
+                    else if(_commandtext=="turn right"){
+                        var n_srotate=_srotate+90;
+                        var step=9;
+                        setrotate(_square,n_srotate,step)
+                    }
+                    //回头
+                    else if(_commandtext=="turn around"){
+                        var n_srotate=_srotate+180;
+                        var step=18;
+                        setrotate(_square,n_srotate,step)
+                    }
+                    //前进
+                    else if(_commandtext=="go") {
+                        //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                        var _srotatesidenum = _srotate / 90;
+                        //判断正负
+                        //正
+                        if (_srotatesidenum > 0) {
+                            //向左的情况
+                            if (_srotatesidenum%4==3) {
+                                movel(_square)
+                            }
+                            //向上的情况
+                            else if(_srotatesidenum%4==0){
+                                moveu(_square)
+                            }
+                            //向下的情况
+                            else if(_srotatesidenum%4==2){
+                                moved(_square)
+                            }
+                            //向右的情况
+                            else if(_srotatesidenum%4==1){
+                                mover(_square)
+                            }
+                        }
+                        //零
+                        else if(_srotatesidenum==0){
+                            moveu(_square)
+                        }
+                        //负数
+                        else if(_srotatesidenum<0){
+                            //向左
+                            if(_srotatesidenum%4==-1){
+                                movel(_square)
+                            }
+                            //向下
+                            else if(_srotatesidenum%4==-2){
+                                moved(_square)
+                            }
+                            //向右
+                            else if(_srotatesidenum%4==-3){
+                                mover(_square)
+                            }
+                            //向上
+                            else if(_srotatesidenum%4==0){
+                                moveu(_square)
+                            }
+                        }
+                    }
+                    //左移
+                    else if(_commandtext=="tra left"){
+                        movel(_square)
+                    }
+                    //右移
+                    else if(_commandtext=="tra right"){
+                        mover(_square)
+                    }
+                    //上移
+                    else if(_commandtext=="tra top"){
+                        moveu(_square)
+                    }
+                    //下移
+                    else if(_commandtext=="tra bot"){
+                        moved(_square)
+                    }
+                    //左转向前
+                    else if(_commandtext=="mov left"){
+                        //左移
+                        movel(_square)
+                        //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                        var _srotatesidenum = _srotate / 90;
+                        //判断正负
+                        //正or零
+                        if (_srotatesidenum >=0) {
+                            //向左的情况
+                            if (_srotatesidenum%4==3) {
+                                //不发生转动
+                            }
+                            //向上的情况
+                            else if(_srotatesidenum%4==0){
+                                //向左旋转
+                                var n_srotate=_srotate-90;
+                                var step=-9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向下的情况
+                            else if(_srotatesidenum%4==2){
+                                //向右旋转
+                                var n_srotate=_srotate+90;
+                                var step=9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向右的情况
+                            else if(_srotatesidenum%4==1){
+                                //回头
+                                var n_srotate=_srotate+180;
+                                var step=18;
+                                setrotate(_square,n_srotate,step)
+                            }
+                        }
+                        //负数
+                        else if(_srotatesidenum<0){
+                            //向左
+                            if(_srotatesidenum%4==-1){
+                                //不旋转
+                            }
+                            //向下
+                            else if(_srotatesidenum%4==-2){
+                                //向右旋转
+                                var n_srotate=_srotate+90;
+                                var step=9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向右
+                            else if(_srotatesidenum%4==-3){
+                                //回头
+                                var n_srotate=_srotate+180;
+                                var step=18;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向上
+                            else if(_srotatesidenum%4==0){
+                                //向左旋转
+                                var n_srotate=_srotate-90;
+                                var step=-9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                        }
+                    }
+                    //右转向右
+                    else if(_commandtext=="mov right"){
+                        //右移
+                        mover(_square)
+                        //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                        var _srotatesidenum = _srotate / 90;
+                        //判断正负
+                        //正or零
+                        if (_srotatesidenum >=0) {
+                            //向左的情况
+                            if (_srotatesidenum%4==3) {
+                                //回头
+                                var n_srotate=_srotate+180;
+                                var step=18;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向上的情况
+                            else if(_srotatesidenum%4==0){
+                                //向右旋转
+                                var n_srotate=_srotate+90;
+                                var step=9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向下的情况
+                            else if(_srotatesidenum%4==2){
+                                //向左旋转
+                                var n_srotate=_srotate-90;
+                                var step=-9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向右的情况
+                            else if(_srotatesidenum%4==1){
+                                //不转动
+                            }
+                        }
+                        //负数
+                        else if(_srotatesidenum<0){
+                            //向左
+                            if(_srotatesidenum%4==-1){
+                                //回头
+                                var n_srotate=_srotate+180;
+                                var step=18;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向下
+                            else if(_srotatesidenum%4==-2){
+                                //向左旋转
+                                var n_srotate=_srotate-90;
+                                var step=-9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向右
+                            else if(_srotatesidenum%4==-3){
+                                //不旋转
+                            }
+                            //向上
+                            else if(_srotatesidenum%4==0){
+                                //向右旋转
+                                var n_srotate=_srotate+90;
+                                var step=9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                        }
+                    }
+                    //朝上上移
+                    else if(_commandtext=="mov top"){
+                        //上移
+                        moveu(_square)
+                        //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                        var _srotatesidenum = _srotate / 90;
+                        //判断正负
+                        //正or零
+                        if (_srotatesidenum >=0) {
+                            //向左的情况
+                            if (_srotatesidenum%4==3) {
+                                //向右旋转
+                                var n_srotate=_srotate+90;
+                                var step=9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向上的情况
+                            else if(_srotatesidenum%4==0){
+                                //不旋转
+                            }
+                            //向下的情况
+                            else if(_srotatesidenum%4==2){
+                                //回头
+                                var n_srotate=_srotate+180;
+                                var step=18;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向右的情况
+                            else if(_srotatesidenum%4==1){
+                                //向左旋转
+                                var n_srotate=_srotate-90;
+                                var step=-9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                        }
+                        //负数
+                        else if(_srotatesidenum<0){
+                            //向左
+                            if(_srotatesidenum%4==-1){
+                                //向右旋转
+                                var n_srotate=_srotate+90;
+                                var step=9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向下
+                            else if(_srotatesidenum%4==-2){
+                                //回头
+                                var n_srotate=_srotate+180;
+                                var step=18;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向右
+                            else if(_srotatesidenum%4==-3){
+                                //向左旋转
+                                var n_srotate=_srotate-90;
+                                var step=-9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向上
+                            else if(_srotatesidenum%4==0){
+                                //不旋转
+                            }
+                        }
+                    }
+                    //朝下下移
+                    else if(_commandtext=="mov bot"){
+                        //下移
+                        moved(_square)
+                        //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                        var _srotatesidenum = _srotate / 90;
+                        //判断正负
+                        //正or零
+                        if (_srotatesidenum >=0) {
+                            //向左的情况
+                            if (_srotatesidenum%4==3) {
+                                //向左旋转
+                                var n_srotate=_srotate-90;
+                                var step=-9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向上的情况
+                            else if(_srotatesidenum%4==0){
+                                //回头
+                                var n_srotate=_srotate+180;
+                                var step=18;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向下的情况
+                            else if(_srotatesidenum%4==2){
+                                //不旋转
+                            }
+                            //向右的情况
+                            else if(_srotatesidenum%4==1){
+                                //向右旋转
+                                var n_srotate=_srotate+90;
+                                var step=9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                        }
+                        //负数
+                        else if(_srotatesidenum<0){
+                            //向左
+                            if(_srotatesidenum%4==-1){
+                                //向左旋转
+                                var n_srotate=_srotate-90;
+                                var step=-9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向下
+                            else if(_srotatesidenum%4==-2){
+                                //不旋转
+                            }
+                            //向右
+                            else if(_srotatesidenum%4==-3){
+                                //向右旋转
+                                var n_srotate=_srotate+90;
+                                var step=9;
+                                setrotate(_square,n_srotate,step)
+                            }
+                            //向上
+                            else if(_srotatesidenum%4==0){
+                                //回头
+                                var n_srotate=_srotate+180;
+                                var step=18;
+                                setrotate(_square,n_srotate,step)
+                            }
+                        }
+                    }
+                    else if(_commandtext=="build"){
+                        //判断是否在运动/转向中
+                        if(thesquare.motionstate==true||thesquare.rotatestate==true){
+                            return false
+                        }
+                        //判断朝向,用角度/90，0为向上，1向右，2向下，3向左，以此循环
+                        var _srotatesidenum = _srotate / 90;
+                        //判断正负
+                        //正
+                        if (_srotatesidenum > 0) {
+                            //向左的情况
+                            if (_srotatesidenum%4==3) {
+                                buildl()
+                            }
+                            //向上的情况
+                            else if(_srotatesidenum%4==0){
+                                buildt()
+                            }
+                            //向下的情况
+                            else if(_srotatesidenum%4==2){
+                                buildd()
+                            }
+                            //向右的情况
+                            else if(_srotatesidenum%4==1){
+                                buildr()
+                            }
+                        }
+                        //零
+                        else if(_srotatesidenum==0){
+                            buildt()
+                        }
+                        //负数
+                        else if(_srotatesidenum<0){
+                            //向左
+                            if(_srotatesidenum%4==-1){
+                                buildl()
+                            }
+                            //向下
+                            else if(_srotatesidenum%4==-2){
+                                buildd()
+                            }
+                            //向右
+                            else if(_srotatesidenum%4==-3){
+                                buildr()
+                            }
+                            //向上
+                            else if(_srotatesidenum%4==0){
+                                buildt()
+                            }
+                        }
+                    }
+                }
+            )
+        }
+    </script>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="x-axis">
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell">1</div>
+            <div class="table-cell">2</div>
+            <div class="table-cell">3</div>
+            <div class="table-cell">4</div>
+            <div class="table-cell">5</div>
+            <div class="table-cell">6</div>
+            <div class="table-cell">7</div>
+            <div class="table-cell">8</div>
+            <div class="table-cell">9</div>
+            <div class="table-cell">10</div>
+        </div>
+    </div>
+    <div class="y-axis">
+        <div class="table-row">1</div>
+        <div class="table-row">2</div>
+        <div class="table-row">3</div>
+        <div class="table-row">4</div>
+        <div class="table-row">5</div>
+        <div class="table-row">6</div>
+        <div class="table-row">7</div>
+        <div class="table-row">8</div>
+        <div class="table-row">9</div>
+        <div class="table-row">10</div>
+    </div>
+    <div class="main table">
+        <div id="square" style="left: 1px;top:1px;   transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -webkit-transform: rotate(0deg);
+        -o-transform: rotate(0deg);">
+            <div class="head"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+        </div>
+    </div>
+    <div class="commandlist2">
+        <div id="rows" style="">
+            <div>1</div>
+            <div>2</div>
+            <div>3</div>
+            <div>4</div>
+            <div>5</div>
+            <div>6</div>
+            <div>7</div>
+            <div>9</div>
+            <div>10</div>
+            <div>11</div>
+            <div>12</div>
+            <div>13</div>
+            <div>15</div>
+            <div>16</div>
+            <div>17</div>
+            <div>18</div>
+            <div>19</div>
+            <div>20</div>
+            <div>21</div>
+            <div>22</div>
+        </div>
+        <textarea id="commandeditor"></textarea>
+        <button id="comedt_cfm">执行</button>
+        <button id="comedt_ref">Refresh</button>
+        <button id="comedt_ran">生成五个随机指令</button>
+    </div>
+</div>
+<div style="margin-top: 20px;margin-left: 75px;line-height: 30px">
+    <input type="text" id="command-text" placeholder="输入一个指令让方块动起来" list="commandlist">
+    <datalist id="commandlist">
+        <option value="just move" label="随机"></option>
+        <option value="go" label="前进"></option>
+        <option value="turn left" label="左转"></option>
+        <option value="turn right" label="右转"></option>
+        <option value="turn around" label="回头"></option>
+        <option value="tra left" label="向左平移"></option>
+        <option value="tra right" label="向右平移"></option>
+        <option value="tra top" label="向上平移"></option>
+        <option value="tra bot" label="向下平移"></option>
+        <option value="mov left" label="朝左左移"></option>
+        <option value="mov right" label="朝右右移"></option>
+        <option value="mov top" label="朝上上移" ></option>
+        <option value="mov bot" label="朝下下移"></option>
+        <option value="build" label="在面前造一座墙"></option>
+    </datalist>
+    <button type="submit" id="submit">执行</button>
+    x坐标：<span id="x-height">1</span>
+    y坐标：<span id="y-height">2</span>
+    <button id="comedt_cruise">自动模式</button>
+    <button id="comedt_cruise_stop">结束自动模式</button>
+    当前自动指令<span id="cruise_cmd" style="display: inline-block;background: #ECECEC"></span>
+</div>
+</body>
+</html>
